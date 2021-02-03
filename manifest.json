@@ -1,5 +1,5 @@
 {
-  "domain": "google_home_local",
+  "domain": "ha-google_home_local",
   "name": "Google home local",
   "documentation": "https://www.example.com",
   "codeowners": ["Simon"],
