@@ -1,0 +1,7 @@
+{
+  "domain": "google_home_local",
+  "name": "Google home local",
+  "documentation": "https://www.example.com",
+  "codeowners": ["Simon"],
+  "requirements": ["glocaltokens==0.1.3"]
+}

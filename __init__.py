@@ -1,0 +1,1 @@
+"""Google home local integration."""
