@@ -8,7 +8,7 @@ app_password doesnt work as of right now, and i havent found an solution for thi
 As of now this component only retieves one device per setup.
 
 ## Installation
-This will only install under Arm/Raspberry Pi 4 docker if you install grpcio and grpcio-tools manually and for that you need to add "apk add gcc g++ linux-headers" first. This is because homeassistant is build on Alpine.
+This will only install under Arm/Raspberry Pi 4 docker if you install grpcio and grpcio-tools manualy and for that you need to add "apk add gcc g++ linux-headers" first. This is because homeassistant is build on Alpine.
 
 Create a folder named ha-google_home_local in your custom_components folder and copy these files in there (excluding readme).
 
