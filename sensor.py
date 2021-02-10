@@ -8,10 +8,10 @@ import json
 import requests
 import logging
 
-from glocaltokens.client import GLocalAuthenticationTokens
+from .glocaltokens.client import GLocalAuthenticationTokens
 from datetime import datetime, timedelta
 import urllib3
-urllib3.disable_warnings()
+#urllib3.disable_warnings()
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ CONF_DEVICE_IP = 'device_ip'
 CONF_DEVICE_NAME = 'device_name'
 CONF_MASTER_TOKEN = 'master_token'
 
-DEFAULT_MASTER_TOKEN = "none"
+DEFAULT_MASTER_TOKEN = None
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MASTER_TOKEN, default=DEFAULT_MASTER_TOKEN): cv.string,
+        vol.Optional(CONF_MASTER_TOKEN): cv.string,
         vol.Required(CONF_DEVICE_IP): cv.string,
         vol.Required(CONF_DEVICE_NAME): cv.string,
     }
@@ -45,11 +45,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the sensor platform."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    master_token = config.get(CONF_MASTER_TOKEN)
+    if config.get(CONF_MASTER_TOKEN):
+        master_token = config.get(CONF_MASTER_TOKEN)
+    else:
+        master_token = DEFAULT_MASTER_TOKEN
     device_ip = config.get(CONF_DEVICE_IP)
     device_name = config.get(CONF_DEVICE_NAME)
 
-    data = ghlocalAPI(username, password, master_token, device_ip, device_name)
+    data = ghlocalAPI(username, password, device_ip, device_name, master_token)
     data.update()
 
     add_devices(
@@ -156,7 +159,7 @@ class Alarm_sensor(Entity):
 
 class ghlocalAPI():
 
-    def __init__(self, username, password, master_token, device_ip, device_name):
+    def __init__(self, username, password, device_ip, device_name, master_token=None):
         self.timers = []
         self.alarms = []
         self.username = username
@@ -165,22 +168,15 @@ class ghlocalAPI():
         self.device_ip = device_ip
         self.device_name = device_name
 
-    def delete(self, id):
-        if self.master_token != DEFAULT_MASTER_TOKEN:
-            client = GLocalAuthenticationTokens(
-              username=self.username,
-              master_token=self.master_token
-            )
-        else:
-            # Does not work right now, use master_token instead
-            client = GLocalAuthenticationTokens(
-              username=self.username,
-              password=self.password
-            )
+        self.client = GLocalAuthenticationTokens(
+          username=self.username,
+          password=self.password,
+          master_token=self.master_token
+        )
 
-        master_token = client.get_master_token()
-        access_token = client.get_access_token()
-        google_devices = client.get_google_devices_json()
+    def delete(self, id):
+
+        google_devices = self.client.get_google_devices_json()
 
         local_token = next(item['localAuthToken'] for item in google_devices if item["deviceName"] == self.device_name)
         #local_token = google_devices[1]['localAuthToken']
@@ -204,21 +200,7 @@ class ghlocalAPI():
 
     def update(self):
 
-        if self.master_token != DEFAULT_MASTER_TOKEN    :
-            client = GLocalAuthenticationTokens(
-              username=self.username,
-              master_token=self.master_token
-            )
-        else:
-            # Does not work right now, use master_token instead
-            client = GLocalAuthenticationTokens(
-              username=self.username,
-              password=self.password
-            )
-
-        master_token = client.get_master_token()
-        access_token = client.get_access_token()
-        google_devices = client.get_google_devices_json()
+        google_devices = self.client.get_google_devices_json()
 
         local_token = next(item['localAuthToken'] for item in google_devices if item["deviceName"] == self.device_name)
         #local_token = google_devices[1]['localAuthToken']
